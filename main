@@ -1,0 +1,270 @@
+;
+; Lab 8.asm
+;
+; Created: 4/10/2020 12:38:30 PM
+; Author : Nathan Farrar
+;
+
+; Included header file for target AVR type
+ .NOLIST                   ;Don't list the following in the list file
+ .INCLUDE "m328pdef.inc"   ;ATmega328p
+ .LIST                     ;Switch list on again
+;
+; ============================================
+; C O N S T A N T S  T O  C H A N G E
+; ============================================
+; [Add all constants here that can be subject
+; to change by the user]
+; Format: .EQU const = $ABCD
+
+ ; ============================================
+; R E G I S T E R  D E F I N I T I O N S
+; ============================================
+;
+; [Add all register names here, include info on
+; all used registers without specific names]
+; Format: .DEF rmp = R16
+
+;
+; ============================================
+; S R A M  D E F I N I T I O N S
+; ============================================
+
+.DSEG       ;Data segment
+.ORG 0X100  ;Set data segment origin | We tell the assembler where the RAM begins for data usage in our program.
+; Format: Label: .BYTE N ; reserve N Bytes from Label:
+
+; ============================================
+; R E S E T  A N D  I N T  V E C T O R S
+; ============================================
+.CSEG          ;Code segment
+.ORG 0x0000      ;Set program origin
+	JMP Main  ; Reset vector, jump to main loop, 1.  Note that actual code is placed further down the program memory so as not to sit on top of vectors.
+	JMP Int0_name ; INT0, 2 -- Interrupt Vector for INT0.  Points to INT0 code.
+	JMP Int1_name   ;INT1, 3 -- Interrupt Vector for INT1.  Points to INT1 code.
+/*	RETI ;PCINT0 not used,4
+	RETI ;PCINT1 not used,5
+	RETI ;PCINT2 not used,6
+	RETI ;WDT not used,7
+	RETI ;TIMER2 COMPA not used,8
+	RETI ;TIMER2 COMPB not used,9
+	RETI ;TIMER2 OVF not used,10
+	RETI ;TIMER1 CAPT not used,11
+	RETI ;TIMER1 COMPA not used,12
+	RETI ;TIMER1 COMPB not used,13
+	RETI ;TIMER1 OVF not used,14
+	RETI ;TIMER0 COMPA not used,15
+	RETI ;TIMER0 COMPB not used,16
+	RETI ;TIMER0 OVF not used,17
+	RETI ;SPI,STC not used,18
+	RETI ;USART,RX not used,19
+	RETI ;USART,UDRE not used,20
+	RETI ;USART,TX not used,21
+	RETI ;ADC not used,22
+	RETI ;EE READY not used,23
+	RETI ;ANALOG COMP not used,24
+	RETI ;TWI not used,25
+	RETI ;SPM READY not used,26*/
+; ============================================
+; I N T E R R U P T  S E R V I C E S
+; ============================================
+;
+Int0_name:
+	PUSH R16 // put R16 data onto the stack in case there is useful information in that register from Main program
+	IN R16, SREG // status register into R16
+	PUSH R16 // push Status Register onto the Stack
+
+	// May have to preserve other important register information. Note that the program counter is automatically pushed to the stack.
+
+	// Do some interrupt stuff.
+
+	// Clean up before exiting ISR:
+	LDI R16, 0b00000001
+	OUT EIFR, R16 ; clear the INT0 flag bit (in case the interrupt was set during the ISR -- as in switch bounce). Note that this 
+	; will not affect the INT1 flag, in case it was triggered during this ISR.
+	POP R16
+	OUT SREG, R16 // pull Status Register off the Stack (make sure that there is nothing else on top of it on the Stack
+				// at this point so that proper SREG info is pulled)
+	POP R16 // return original data to R16
+
+	RETI // Return from interrupt.  Program Counter is reloaded with instruction address in main code where it left off.
+
+Int1_name:
+	PUSH R16 // put R16 data onto the stack in case there is useful information in that register from Main program
+	IN R16, SREG
+	PUSH R16 // push Status Register onto the Stack
+
+	LDI R16, 0b11111111 ;0
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11111110 ;1
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11111101 ;2
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11111100 ;3
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11111011 ;4
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11111010 ;5
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11111001 ;6
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11111000 ;7
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11110111 ;8
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11110110 ;9
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11110101 ;10
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11110100 ;11
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11110011 ;12
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11110010 ;13
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11110001 ;14
+	OUT PORTC, R16
+	CALL wait
+
+	LDI R16, 0b11110000 ;15
+	OUT PORTC, R16
+	CALL wait
+
+
+	LDI R16, 0b00000010 ; clear the INT1 flag bit (in case the interrupt was set during the ISR -- as in switch bounce). 
+	OUT EIFR, R16 ; ; clear the INT1 flag bit (in case the interrupt was set during the ISR ?? as in switch bounce). Note that this
+; will not affect the INT0 flag, in case it was triggered during this ISR.
+	POP R16
+	OUT SREG, R16 // pull Status Register off the Stack (make sure that there is nothing else on top of it on the Stack
+				// at this point so that proper SREG info is pulled)
+	POP R16 // return original data to R16
+
+	RETI
+;
+; ============================================
+; M A I N P R O G R A M  I N I T
+; ============================================
+Main:
+	
+	/* Initialize stack */
+	LDI R16, HIGH(RAMEND) ; Init HSB stack | 0x08
+	OUT SPH,R16
+	LDI R16, LOW(RAMEND)  ; Init LSB stack | 0xFF
+	OUT SPL,R16           ; to stack pointer
+
+	LDI R17, 0b11111111  ; define Port C bits output
+	OUT DDRC, R17
+	OUT PORTC, R17		; turn off all LEDs (they are active low)
+
+	/* Enable External Interrupts */
+	/* EIMSK: external interrupt mask register */
+	LDI R16, (1<<INT0)|(1<<INT1)  ;enable EXINT 0 and EXINT 1
+	OUT EIMSK, R16
+
+	/* Select type of interrupt */
+	/* EICRA: external interrupt control register */
+	LDI R16, (1<<ISC01)|(1<<ISC00)|(1<<ISC10)|(1<<ISC11) ;EXINT0: rising edge, EXINT1: rising edge
+	/* Attention: cannot use OUT to load value into EICRA, must use STS */
+	STS EICRA, R16
+	 
+	/*********/
+	; Initialize ports and do other housekeeping before you main code starts.
+	/*********/
+
+	SEI // Set Global Interrupt Enable.  Interrupts can occur after this point.
+;
+; ============================================
+; P R O G R A M L O O P
+; ============================================
+
+
+Loop_main:
+	LDI R17, 0b11111110
+	OUT PORTC, R17
+	CALL wait
+	CALL wait
+	CALL wait
+	CALL wait
+
+	LDI R17, 0b11111101
+	OUT PORTC, R17
+	CALL wait
+	CALL wait
+	CALL wait
+	CALL wait
+
+	LDI R17, 0b11111011
+	OUT PORTC, R17
+	CALL wait
+	CALL wait
+	CALL wait
+	CALL wait
+
+	LDI R17, 0b11110111
+	OUT PORTC, R17
+	CALL wait
+	CALL wait
+	CALL wait
+	CALL wait
+
+RJMP Loop_main
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+wait: // this subroutine creates a delay of 0-255 msec by repeatedly calling delay_1msec
+	LDI R22, 250 // choose the number of msec to delay
+	count_down:
+	CALL delay_1msec
+	DEC R22
+	BRNE count_down
+	RET // return from subroutine
+
+delay_1msec: // this subroutine creates a 1msec delay with TIMER0 register and prescaler of 64 (assumes 16MHz clock)
+	LDI R20, 0x00 // clears WGM00 and WGM01 (bits 0 and 1) to ensure Timer/Counter is in normal mode.
+	OUT TCCR0A, R20
+	
+	LDI R20, 0x00 // clear timer register
+	OUT TCNT0, R20
+	
+	LDI R21, 250 // set desired count value for later compare
+		
+	LDI R20, 0b00000011 //1<<CS01 | 1<<CS00;	TCCR0B = 0x03;  // Start TIMER0, Normal mode, crystal clock, prescaler = 64
+	OUT TCCR0B, R20
+
+	keep_counting:
+	IN R20, TCNT0  //read TCNT0 and compare to desired count.  Loop until count = 250.
+	CPSE R20, R21
+	RJMP keep_counting
+
+	LDI R20, 0x00; // Stop TIMER0
+	OUT TCCR0B, R20
+	RET // return from subroutine
